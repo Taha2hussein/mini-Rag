@@ -17,3 +17,9 @@ open termanl and write:
 activate environment:
 
 > conda activate mini-rag
+
+# Installation
+
+> pip install -r requirments.txt
+
+> add file ".env" and copy text from ".env.example" and add your openai key
