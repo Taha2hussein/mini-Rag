@@ -12,11 +12,12 @@ class Settings(BaseSettings):
     STORAGE_PROVIDER: str = "s3"   # "local" أو "s3"
     FILE_DIR: str = "assets/files"
 
-    AWS_BUCKET_NAME: str = ""
-    AWS_ACCESS_KEY: str = ""
-    AWS_SECRET_KEY: str = ""
+    AWS_BUCKET_NAME: str = "rag-taha-files-taha"
+    AWS_ACCESS_KEY: str = "1B45420CF65D6E723EDC"
+    AWS_SECRET_KEY: str = "noFcvVfipxR0PksJzzWd2XKkM7hXyPvuS1rSiwXM"
     AWS_REGION: str = "us-east-1"
     S3_ENDPOINT_URL: str = "https://s3.filebase.io"
+
     
     class Config:
         env_file = Path(__file__).parent / ".env"
