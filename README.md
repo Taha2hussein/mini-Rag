@@ -23,3 +23,7 @@ activate environment:
 > pip install -r requirments.txt
 
 > add file ".env" and copy text from ".env.example" and add your openai key
+
+# Run Reload
+
+uvicorn main:app --reload --host 0.0.0.0 --port 5001
