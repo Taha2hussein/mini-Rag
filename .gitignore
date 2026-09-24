@@ -1,2 +1,27 @@
 .vscode/
 .vscode/PythonImportHelper-v2-Completion.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+
+# OS
+.DS_Store
+Thumbs.db
