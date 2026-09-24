@@ -1,8 +1,7 @@
-# Controllers/StorageProviderFactory.py
-
 from .StorageProviderInterface import StorageProviderInterface
 from .LocalStorageProvider import LocalStorageProvider
 from .S3StorageProvider import S3StorageProvider
+from Models.StorageProviderType import StorageProviderType
 
 
 def get_storage_provider(settings) -> StorageProviderInterface:
@@ -11,12 +10,12 @@ def get_storage_provider(settings) -> StorageProviderInterface:
     في الإعدادات. أي كود بينادي الـ function دي مش محتاج يعرف
     هل الملفات هتتخزن محليًا ولا على S3/Filebase.
     """
-    provider = settings.STORAGE_PROVIDER.lower()
+    provider = StorageProviderType(settings.STORAGE_PROVIDER.lower())
 
-    if provider == "local":
+    if provider == StorageProviderType.LOCAL:
         return LocalStorageProvider(base_dir=settings.FILE_DIR)
 
-    if provider == "s3":
+    if provider == StorageProviderType.S3:
         return S3StorageProvider(
             bucket_name=settings.AWS_BUCKET_NAME,
             access_key=settings.AWS_ACCESS_KEY,
@@ -26,3 +25,4 @@ def get_storage_provider(settings) -> StorageProviderInterface:
         )
 
     raise ValueError(f"Unknown storage provider: {settings.STORAGE_PROVIDER}")
+

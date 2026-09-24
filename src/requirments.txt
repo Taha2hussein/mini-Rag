@@ -5,3 +5,7 @@ pydantic-settings
 boto3==1.43.100
 botocore==1.43.100
 starlette
+pypdf==6.19.0
+langchain==1.4.2
+langchain-text-splitters
+tiktoken
