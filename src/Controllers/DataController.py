@@ -1,12 +1,23 @@
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
+
 from .BaseController import BaseController
 from .TextExtraction.FileLoaderFactory import get_file_loader
 
 from Models import FileType
 
-from Database.models import Session as SessionModel, Document
+from Database.models import (
+    Session as SessionModel,
+    Document,
+)
 
-from starlette.concurrency import run_in_threadpool
-from sqlalchemy.orm import Session
+from Embeddings import get_embedding_service
+
+from VectorStore import (
+    get_vector_store,
+    get_vector_point_builder,
+)
 
 
 class DataController(BaseController):
@@ -22,7 +33,9 @@ class DataController(BaseController):
 
     async def validate_file(self, file):
 
-        if file.content_type.split("/")[1] not in self.settings.FILE_ALLOWED_TYPES:
+        if file.content_type.split("/")[1] not in (
+            self.settings.FILE_ALLOWED_TYPES
+        ):
             return (
                 False,
                 f"{FileType.FILE_TYPE_NOT_ALLOWED.value}: "
@@ -33,31 +46,56 @@ class DataController(BaseController):
             return (
                 False,
                 f"{FileType.FILE_SIZE_NOT_ALLOWED.value}. "
-                f"Allowed size: {self.settings.FILE_ALLOWED_SIZE_MB} MB",
+                f"Allowed size: "
+                f"{self.settings.FILE_ALLOWED_SIZE_MB} MB",
             )
 
-        return True, FileType.FILE_UPLOADED_SUCCESSFULLY.value
+        return (
+            True,
+            FileType.FILE_UPLOADED_SUCCESSFULLY.value,
+        )
 
     async def upload_file(
         self,
         session_id: str,
         file,
         db: Session,
+        user_id: int,
     ):
 
-        session = db.get(SessionModel, session_id)
+        # ---------------------------------------------
+        # 1. Validate session ownership
+        # ---------------------------------------------
+
+        session = (
+            db.query(SessionModel)
+            .filter(
+                SessionModel.id == session_id,
+                SessionModel.user_id == user_id,
+            )
+            .first()
+        )
 
         if session is None:
-            return {
-                "error": "Session not found."
-            }
+            raise HTTPException(
+                status_code=404,
+                detail="Session not found.",
+            )
+
+        # ---------------------------------------------
+        # 2. Validate file
+        # ---------------------------------------------
 
         is_valid, message = await self.validate_file(file)
 
         if not is_valid:
             return {
-                "error": message
+                "error": message,
             }
+
+        # ---------------------------------------------
+        # 3. Save file
+        # ---------------------------------------------
 
         file_id = f"{session_id}/{file.filename}"
 
@@ -66,6 +104,10 @@ class DataController(BaseController):
             file,
             file_id,
         )
+
+        # ---------------------------------------------
+        # 4. Save document metadata
+        # ---------------------------------------------
 
         document = Document(
             session_id=session_id,
@@ -88,35 +130,57 @@ class DataController(BaseController):
         self,
         document_id: str,
         db: Session,
+        user_id: int,
     ):
 
-        # 1. Get document from PostgreSQL
-        document = db.get(Document, document_id)
+        # ---------------------------------------------
+        # 1. Get document with user isolation
+        # ---------------------------------------------
+
+        document = (
+            db.query(Document)
+            .join(SessionModel)
+            .filter(
+                Document.id == document_id,
+                SessionModel.user_id == user_id,
+            )
+            .first()
+        )
 
         if document is None:
-            return {
-                "error": "Document not found."
-            }
+            raise HTTPException(
+                status_code=404,
+                detail="Document not found.",
+            )
 
-        # 2. Get the real storage file_id
+        # ---------------------------------------------
+        # 2. Get file from storage
+        # ---------------------------------------------
+
         file_id = document.file_id
 
-        # 3. Get file from storage
         file_bytes = await run_in_threadpool(
             self.storage.get_file,
             file_id,
         )
 
-        # 4. Get loader using the real filename
-        loader = get_file_loader(document.filename)
+        # ---------------------------------------------
+        # 3. Extract text
+        # ---------------------------------------------
 
-        # 5. Extract text
+        loader = get_file_loader(
+            document.filename
+        )
+
         extracted_text = await run_in_threadpool(
             loader.load,
             file_bytes,
         )
 
-        # 6. Split text into chunks
+        # ---------------------------------------------
+        # 4. Chunk document
+        # ---------------------------------------------
+
         chunks = await run_in_threadpool(
             self.chunker.chunk,
             extracted_text,
@@ -124,14 +188,70 @@ class DataController(BaseController):
                 "source": file_id,
                 "session_id": document.session_id,
                 "document_id": document.id,
+                "user_id": user_id,
             },
         )
 
-        # 7. Return processing result
+        if not chunks:
+            return {
+                "document_id": document.id,
+                "filename": document.filename,
+                "chunks_count": 0,
+                "vectors_stored": 0,
+                "status": "processed",
+            }
+
+        # ---------------------------------------------
+        # 5. Generate Dense + Sparse embeddings
+        # ---------------------------------------------
+
+        embedding_service = get_embedding_service()
+
+        chunk_texts = [
+            chunk.page_content
+            for chunk in chunks
+        ]
+
+        embedding_result = await run_in_threadpool(
+            embedding_service.encode,
+            chunk_texts,
+        )
+
+        dense_vectors = embedding_result["dense_vecs"]
+        sparse_vectors = embedding_result["lexical_weights"]
+
+        # ---------------------------------------------
+        # 6. Build Qdrant points
+        # ---------------------------------------------
+
+        point_builder = get_vector_point_builder()
+
+        points = point_builder.build_points(
+            chunks=chunks,
+            dense_vectors=dense_vectors,
+            sparse_vectors=sparse_vectors,
+        )
+
+        # ---------------------------------------------
+        # 7. Store points in Qdrant
+        # ---------------------------------------------
+
+        vector_store = get_vector_store()
+
+        await run_in_threadpool(
+            vector_store.upsert,
+            points,
+        )
+
+        # ---------------------------------------------
+        # 8. Return processing result
+        # ---------------------------------------------
+
         return {
             "document_id": document.id,
             "filename": document.filename,
             "chunks_count": len(chunks),
+            "vectors_stored": len(points),
             "first_chunk_preview": (
                 chunks[0].page_content[:200]
                 if chunks
@@ -142,6 +262,7 @@ class DataController(BaseController):
                 if chunks
                 else None
             ),
+            "status": "processed",
         }
 
 

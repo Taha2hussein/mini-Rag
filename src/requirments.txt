@@ -12,3 +12,8 @@ tiktoken
 SQLAlchemy==2.0.54
 psycopg2-binary==2.9.13
 alembic==1.20.0
+sentence-transformers
+PyJWT
+qdrant-client
+FlagEmbedding
+openai==2.45.0

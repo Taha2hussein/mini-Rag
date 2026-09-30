@@ -1,0 +1,97 @@
+[
+  {
+    "question": "How do I create a new Git branch?",
+    "expected_keywords": [
+      "git checkout -b"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I initialize a Git repository?",
+    "expected_keywords": [
+      "git init"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I clone a GitHub repository?",
+    "expected_keywords": [
+      "git clone"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I switch to another Git branch?",
+    "expected_keywords": [
+      "git checkout"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I create a branch and switch to it?",
+    "expected_keywords": [
+      "git checkout -b"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I add changes before committing in Git?",
+    "expected_keywords": [
+      "git add"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I commit changes in Git?",
+    "expected_keywords": [
+      "git commit"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I push changes using Git?",
+    "expected_keywords": [
+      "git push"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "What command is used to check the current Git branch?",
+    "expected_keywords": [
+      "git branch"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "What is Git used for?",
+    "expected_keywords": [
+      "git"
+    ],
+    "should_have_answer": true
+  },
+  {
+    "question": "How do I make pancakes?",
+    "expected_keywords": [],
+    "should_have_answer": false
+  },
+  {
+    "question": "What is the capital of Japan?",
+    "expected_keywords": [],
+    "should_have_answer": false
+  },
+  {
+    "question": "How do I configure a PostgreSQL database?",
+    "expected_keywords": [],
+    "should_have_answer": false
+  },
+  {
+    "question": "How do I build an iOS application with SwiftUI?",
+    "expected_keywords": [],
+    "should_have_answer": false
+  },
+  {
+    "question": "How do I train a neural network with PyTorch?",
+    "expected_keywords": [],
+    "should_have_answer": false
+  }
+]

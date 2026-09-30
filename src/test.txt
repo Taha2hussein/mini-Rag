@@ -1,0 +1,12 @@
+I am a senior iOS developer with more than five years of experience.
+I build production mobile applications using Swift, SwiftUI, and UIKit.
+
+I have experience with REST APIs, OAuth authentication, JWT, Keychain,
+secure data storage, push notifications, and App Store deployment.
+
+I also have experience with Flutter and modern AI technologies.
+Recently, I have been learning Generative AI, RAG systems,
+embeddings, vector databases, and AI agents.
+
+A Retrieval-Augmented Generation system can retrieve relevant documents
+from a vector database and provide them as context to a language model.

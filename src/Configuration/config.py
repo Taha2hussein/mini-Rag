@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+
     OPENAI_API_KEY: str
 
     APP_NAME: str
@@ -26,6 +27,18 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+
+    # Authentication
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+
+
+    RAG_RETRIEVAL_LIMIT: int = 20
+    RAG_CONTEXT_LIMIT: int = 5
+    RERANKER_RELEVANCE_THRESHOLD: float = 0.5
+
+    CONTEXT_MIN_RERANKER_SCORE: float = 0.5
+    CONTEXT_MAX_RESULTS: int = 5
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent / ".env",
