@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wemi AI</title>
+<style>
+:root{--bg:#0c0e13;--pn:#11141b;--el:#181c26;--bd:#242938;--tx:#e8eaf0;--mu:#8b92a6;--ac:#8b7cff;--ac2:#38d0e8;--er:#ff6b7a;--ok:#4ade80}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.6 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}
+.grad{background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo{font-weight:700;font-size:19px;display:flex;align-items:center;gap:9px}
+.logo i{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:inline-block}
+.btn{background:linear-gradient(135deg,var(--ac),#6b5cf0);border:0;border-radius:10px;padding:10px 16px;font-weight:600;color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}.ghost{background:var(--el);border:1px solid var(--bd);color:var(--tx)}
+.hide{display:none!important}
+#auth{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(800px 400px at 50% -10%,#2a2470 0,transparent 70%)}
+.card{width:100%;max-width:400px;background:var(--pn);border:1px solid var(--bd);border-radius:18px;padding:32px}
+.card h2{margin:20px 0 4px}.card p{color:var(--mu);margin:0 0 18px}
+.card label{display:block;font-size:13px;color:var(--mu);margin:12px 0 5px}
+.card input{width:100%;background:var(--el);border:1px solid var(--bd);border-radius:10px;padding:11px 12px;outline:0}
+.card input:focus,.comp:focus-within{border-color:var(--ac)}
+.card .btn{width:100%;margin-top:18px}.err{color:var(--er);font-size:13px;margin-top:12px;white-space:pre-wrap}
+.sw{text-align:center;margin-top:16px;color:var(--mu);font-size:14px}.sw a{color:var(--ac);cursor:pointer}
+.tabs{display:flex;background:var(--el);border:1px solid var(--bd);border-radius:12px;padding:4px;margin:6px 0 2px}.tabs button{flex:1;background:none;border:0;border-radius:9px;padding:8px;color:var(--mu);font-weight:600}.tabs button.on{background:var(--pn);color:var(--tx);box-shadow:0 0 0 1px var(--bd)}
+#app{display:flex;height:100%}
+#side{width:280px;background:var(--pn);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px;flex:none;transition:transform .25s}
+#side .btn{margin:16px 0 10px}#q{width:100%;background:var(--el);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;outline:0;margin-bottom:10px}
+#list{flex:1;overflow:auto}.sec{font-size:12px;color:var(--mu);margin:6px 4px}
+.it{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer}
+.it:hover,.it.on{background:var(--el)}.it.on{box-shadow:inset 2px 0 var(--ac)}
+.it div{flex:1;min-width:0}.it b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it small{color:var(--mu);font-size:12px}.it button{background:none;border:0;color:var(--mu);opacity:0;padding:4px 6px;border-radius:6px}
+.it:hover button{opacity:1}.it button:hover{color:var(--er);background:#2a1f26}
+.foot{border-top:1px solid var(--bd);padding-top:12px;display:flex;justify-content:space-between;align-items:center;color:var(--mu);font-size:13px}
+.foot span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+.top{height:54px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid var(--bd)}
+.top .t{color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#menu{display:none;background:none;border:0;font-size:20px}
+#msgs{flex:1;overflow:auto;padding:24px 16px}.wrap{max-width:780px;margin:0 auto}
+.welcome{text-align:center;margin-top:9vh}.welcome h1{font-size:44px;margin:0}.welcome p{color:var(--mu);font-size:18px}
+.ex{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px}
+.ex button{background:var(--pn);border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:left;color:var(--mu)}
+.ex button:hover{border-color:var(--ac);color:var(--tx)}
+.m{margin:18px 0;display:flex;gap:12px}.m.u{justify-content:flex-end}
+.av{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--ac),var(--ac2));flex:none}
+.bub{max-width:100%;min-width:0;overflow-wrap:anywhere}.u .bub{background:var(--el);border:1px solid var(--bd);padding:10px 15px;border-radius:16px 16px 4px 16px;max-width:82%;white-space:pre-wrap}
+.bub p{margin:0 0 10px}.bub pre{background:#07080c;border:1px solid var(--bd);border-radius:10px;padding:12px;overflow:auto}
+.bub code{font-family:ui-monospace,Menlo,monospace;font-size:13px}.bub :not(pre)>code{background:var(--el);padding:2px 6px;border-radius:5px}
+.bub ul,.bub ol{margin:0 0 10px;padding-left:22px}.bub h3,.bub h4{margin:14px 0 6px}
+.src{margin-top:10px}.src>span{font-size:12px;color:var(--mu);letter-spacing:.06em;text-transform:uppercase}
+.src details{background:var(--pn);border:1px solid var(--bd);border-radius:10px;margin-top:6px;font-size:13px}
+.src summary{padding:8px 12px;cursor:pointer;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.src summary em{font-style:normal;color:var(--ac2)}.src details div{padding:0 12px 10px;color:var(--mu);word-break:break-all}
+.dots{display:inline-flex;gap:5px;padding:8px 0}.dots i{width:7px;height:7px;border-radius:50%;background:var(--ac);animation:b 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}@keyframes b{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.mer{color:var(--er);background:#2a1a20;border:1px solid #4a2530;border-radius:10px;padding:10px 14px;font-size:14px}.mer button{margin-left:10px}
+#dock{padding:0 16px 18px}.files{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.fc{background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:7px 12px;font-size:13px;display:flex;gap:10px;align-items:center}
+.fc small{color:var(--mu)}.fc .Ready{color:var(--ok)}.fc .Failed{color:var(--er)}.fc .Uploading,.fc .Processing{color:var(--ac2)}
+.comp{display:flex;align-items:flex-end;gap:8px;background:var(--pn);border:1px solid var(--bd);border-radius:20px;padding:8px}
+.comp textarea{flex:1;background:none;border:0;outline:0;resize:none;max-height:180px;padding:8px 6px}
+.ic{width:38px;height:38px;border-radius:12px;background:var(--el);border:1px solid var(--bd);font-size:17px;flex:none}
+#send{width:38px;height:38px;border-radius:12px;padding:0}
+#drop{position:absolute;inset:0;background:#0c0e13d9;border:2px dashed var(--ac);display:flex;align-items:center;justify-content:center;font-size:20px;z-index:5;pointer-events:none}
+.ov{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
+.mod{background:var(--pn);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:380px;width:100%}
+.mod .r{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.dng{background:var(--er)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;gap:8px}
+#toast div{background:var(--el);border:1px solid var(--bd);border-radius:10px;padding:10px 16px;font-size:14px}
+@media(max-width:800px){#side{position:fixed;inset:0 auto 0 0;z-index:8;transform:translateX(-100%)}#side.open{transform:none}#menu{display:block}.ex{grid-template-columns:1fr}.welcome h1{font-size:34px}}
+</style></head><body>
+
+<div id="auth" class="hide"><div class="card">
+<div class="logo"><i></i>Wemi AI</div><h2 id="ah">Welcome back</h2><p id="as">Your knowledge, connected to AI.</p>
+<div class="tabs" id="tabs"></div><div id="af"></div><div class="err" id="ae"></div>
+<button class="btn" id="ab">Log in</button>
+<div class="sw" id="asw"></div></div></div>
+
+<div id="app" class="hide">
+<aside id="side"><div class="logo"><i></i>Wemi AI</div>
+<button class="btn" id="nc">＋ New Chat</button><input id="q" placeholder="Search chats">
+<div class="sec">Chats</div><div id="list"></div>
+<div class="foot"><span id="who"></span><button class="ghost btn" id="lo" style="padding:6px 12px">Logout</button></div></aside>
+<section id="main"><div class="top"><button id="menu">☰</button><b class="grad">Wemi AI</b><span class="t" id="ttl"></span></div>
+<div id="msgs"><div class="wrap" id="chat"></div></div>
+<div id="dock"><div class="wrap"><div class="files" id="files"></div>
+<div class="comp"><button class="ic" id="att" title="Attach a document">📎</button>
+<textarea id="in" rows="1" placeholder="Ask anything about your documents..."></textarea>
+<button class="btn" id="send" title="Send">➤</button></div></div></div>
+<input type="file" id="fi" class="hide"><div id="drop" class="hide">Drop a document to upload</div></section></div>
+<div id="toast"></div>
+
+<script>
+const AUTH='http://localhost:5003',RAG='http://localhost:5004',TK='wemi_token',SK='wemi_active';
+const $=id=>document.getElementById(id);
+const S={user:null,sessions:[],cur:null,busy:false,files:[],mode:'login',extra:[],srcs:{}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+class ApiError extends Error{constructor(m,s,d){super(m);this.status=s;this.data=d}}
+function errMsg(st,d){const x=d&&d.detail!==undefined?d.detail:d&&(d.message||d.error);
+ if(typeof x==='string')return x;
+ if(Array.isArray(x))return x.map(e=>(e.loc?e.loc.filter(p=>p!=='body').join('.')+': ':'')+(e.msg||JSON.stringify(e))).join('\n');
+ return({401:'Your session is invalid or expired. Please log in again.',403:'You do not have permission to do that.',404:'Not found.',422:'The server rejected the input.',500:'The server hit an error. Try again shortly.'})[st]||('Request failed ('+st+').')}
+async function api(base,path,o={}){const{method='GET',json,form,auth=true}=o,h={},t=localStorage.getItem(TK);
+ if(auth&&t)h.Authorization='Bearer '+t;let body;
+ if(json!==undefined){h['Content-Type']='application/json';body=JSON.stringify(json)}else if(form)body=form;
+ const ac=new AbortController(),to=setTimeout(()=>ac.abort(),120000);let r;
+ try{r=await fetch(base+path,{method,headers:h,body,signal:ac.signal})}
+ catch(e){throw new ApiError(e.name==='AbortError'?'The request timed out.':'Cannot reach the server. Make sure the backend is running and allows CORS from http://localhost:5500.',0)}
+ finally{clearTimeout(to)}
+ const tx=await r.text();let d=null;
+ if(tx){try{d=JSON.parse(tx)}catch{if(r.ok)throw new ApiError('The server returned invalid JSON.',r.status)}}
+ if(!r.ok){if(r.status===401&&auth)logout('Session expired. Please log in again.');throw new ApiError(errMsg(r.status,d),r.status,d)}
+ return d}
+function toast(m){const d=document.createElement('div');d.textContent=m;$('toast').append(d);setTimeout(()=>d.remove(),4500)}
+
+/* ---------- auth ---------- */
+function showAuth(msg){$('app').classList.add('hide');$('auth').classList.remove('hide');S.extra=[];renderAuth();$('ae').textContent=msg||''}
+function renderAuth(){const l=S.mode==='login';
+ $('ah').textContent=l?'Welcome back':'Create your account';
+ $('as').textContent=l?'Log in to continue to your workspace.':'Start chatting with your documents in seconds.';
+ $('ab').textContent=l?'Log in':'Sign up';
+ $('tabs').innerHTML='<button data-m="login" class="'+(l?'on':'')+'">Log in</button><button data-m="signup" class="'+(l?'':'on')+'">Sign up</button>';
+ $('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(S.mode!==b.dataset.m){S.mode=b.dataset.m;S.extra=[];renderAuth()}});
+ const f=(id,lab,type,ac)=>`<label>${lab}</label><input id="${id}" type="${type}" autocomplete="${ac||'on'}">`;
+ const ev=$('a_email')?$('a_email').value:'';
+ $('af').innerHTML=f('a_email','Email','email','email')+f('a_password','Password','password',l?'current-password':'new-password')+
+  (l?'':f('a_confirm','Confirm password','password','new-password')+S.extra.map(k=>f('x_'+k,k.replace(/_/g,' '),/pass/i.test(k)?'password':'text')).join(''));
+ $('a_email').value=ev;$('ae').textContent='';
+ $('asw').innerHTML=l?'New here? <a id="swl">Create an account</a>':'Already registered? <a id="swl">Log in</a>';
+ $('swl').onclick=()=>{S.mode=l?'signup':'login';S.extra=[];renderAuth()}}
+async function submitAuth(){const email=$('a_email').value.trim(),password=$('a_password').value;$('ae').textContent='';
+ if(!/^\S+@\S+\.\S+$/.test(email))return $('ae').textContent='Enter a valid email address.';
+ if(password.length<1)return $('ae').textContent='Enter your password.';
+ if(S.mode==='signup'&&$('a_confirm').value!==password)return $('ae').textContent='Passwords do not match.';
+ $('ab').disabled=true;const old=$('ab').textContent;$('ab').textContent='Please wait…';
+ try{
+  if(S.mode==='signup'){const body={email,password};S.extra.forEach(k=>body[k]=$('x_'+k).value);
+   try{await api(AUTH,'/auth/signup',{method:'POST',json:body,auth:false})}
+   catch(e){ // adapt to backend schema: add any fields it reports as missing
+    const miss=(e.data&&Array.isArray(e.data.detail)?e.data.detail:[]).filter(x=>x.type==='missing'||/required/i.test(x.msg||'')).map(x=>x.loc[x.loc.length-1]).filter(k=>k&&!['email','password'].includes(k)&&!S.extra.includes(k));
+    if(e.status===422&&miss.length){S.extra.push(...miss);const ev=email,pv=password;renderAuth();$('a_email').value=ev;$('a_password').value=pv;$('a_confirm').value=pv;
+     $('ae').textContent='Please fill in the additional fields required by the server.';return}
+    throw e}}
+  if(S.mode==='signup')toast('Account created ✓');const r=await api(AUTH,'/auth/login',{method:'POST',json:{email,password},auth:false});
+  if(!r||!r.user_token)throw new ApiError('Login response did not include user_token.',200);
+  localStorage.setItem(TK,r.user_token);await boot()
+ }catch(e){$('ae').textContent=e.status===401&&S.mode==='login'?'Invalid email or password.':e.message}
+ finally{$('ab').disabled=false;$('ab').textContent=old}}
+function logout(msg){localStorage.removeItem(TK);localStorage.removeItem(SK);Object.assign(S,{user:null,sessions:[],cur:null,files:[],busy:false,srcs:{}});S.mode='login';showAuth(typeof msg==='string'?msg:'')}
+
+/* ---------- sessions ---------- */
+const sid=s=>s&&(s.session_id||s.id);
+const title=s=>(s&&s.title&&String(s.title).trim())||'New Chat';
+const fmt=d=>{const x=new Date(d);return isNaN(x)?'':x.toLocaleDateString(undefined,{month:'short',day:'numeric'})};
+async function loadSessions(){const r=await api(RAG,'/api/v1/sessions');const a=Array.isArray(r)?r:(r&&r.sessions)||[];
+ S.sessions=a.sort((x,y)=>new Date(y.created_at||0)-new Date(x.created_at||0))}
+async function newSession(select=true){const r=await api(RAG,'/api/v1/sessions',{method:'POST'});
+ const s=r&&(r.session||r);if(!sid(s))throw new ApiError('The server did not return a session.',200);
+ const n={session_id:sid(s),title:s.title,created_at:s.created_at||new Date().toISOString()};S.sessions.unshift(n);
+ if(select)await selectSession(n.session_id);else renderList();return n}
+async function selectSession(id){S.cur=id;localStorage.setItem(SK,id);S.files=[];renderFiles();renderList();
+ $('side').classList.remove('open');$('chat').innerHTML='<div class="dots"><i></i><i></i><i></i></div>';
+ try{const r=await api(RAG,'/api/v1/sessions/'+encodeURIComponent(id)+'/messages');
+  if(S.cur!==id)return;const ms=(r&&r.messages)||[];$('chat').innerHTML='';
+  if(!ms.length)welcome();else ms.forEach((m,i)=>addMsg(m.role,m.content,(S.srcs[id]||{})[m.content]));scroll()}
+ catch(e){$('chat').innerHTML='';addErr(e.message,()=>selectSession(id))}}
+function renderList(){const q=$('q').value.toLowerCase();
+ $('list').innerHTML=S.sessions.filter(s=>title(s).toLowerCase().includes(q)).map(s=>
+ `<div class="it ${sid(s)===S.cur?'on':''}" data-id="${esc(sid(s))}"><div><b>${esc(title(s))}</b><small>${fmt(s.created_at)}</small></div><button data-del="${esc(sid(s))}" title="Delete chat">🗑</button></div>`).join('')||'<div class="sec">No chats found</div>';
+ const s=S.sessions.find(x=>sid(x)===S.cur);$('ttl').textContent=s?'/ '+title(s):''}
+function askDelete(id){const o=document.createElement('div');o.className='ov';
+ o.innerHTML='<div class="mod"><h3 style="margin:0 0 8px">Delete this chat?</h3><span style="color:var(--mu)">This permanently removes the conversation.</span><div class="r"><button class="btn ghost" id="c1">Cancel</button><button class="btn dng" id="c2">Delete</button></div></div>';
+ document.body.append(o);o.onclick=e=>{if(e.target===o)o.remove()};$('c1').onclick=()=>o.remove();
+ $('c2').onclick=async()=>{$('c2').disabled=true;try{await api(RAG,'/api/v1/sessions/'+encodeURIComponent(id),{method:'DELETE'});o.remove();
+  S.sessions=S.sessions.filter(s=>sid(s)!==id);
+  if(S.cur===id){S.sessions.length?await selectSession(sid(S.sessions[0])):await newSession()}else renderList()}
+  catch(e){o.remove();toast(e.message)}}}
+
+/* ---------- chat ---------- */
+function md(t){const bl=[];t=esc(t).replace(/```\w*\n?([\s\S]*?)```/g,(m,c)=>{bl.push('<pre><code>'+c+'</code></pre>');return '\u0001'+(bl.length-1)+'\u0001'});
+ const inl=s=>s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|\W)\*([^*\n]+)\*/g,'$1<i>$2</i>');
+ let o='',list=null,para=[];const fl=()=>{if(para.length){o+='<p>'+inl(para.join('<br>'))+'</p>';para=[]}},cl=()=>{if(list){o+='</'+list+'>';list=null}};
+ for(const ln of t.split('\n')){let m;
+  if(m=ln.match(/^\u0001(\d+)\u0001$/)){fl();cl();o+=bl[m[1]]}
+  else if(m=ln.match(/^\s*([-*]|\d+\.)\s+(.*)/)){fl();const k=/\d/.test(m[1])?'ol':'ul';if(list!==k){cl();o+='<'+k+'>';list=k}o+='<li>'+inl(m[2])+'</li>'}
+  else if(m=ln.match(/^#{1,6}\s+(.*)/)){fl();cl();o+='<h3>'+inl(m[1])+'</h3>'}
+  else if(!ln.trim()){fl();cl()}else{cl();para.push(ln)}}
+ fl();cl();return o.replace(/\u0001(\d+)\u0001/g,(m,i)=>bl[i])}
+const num=v=>typeof v==='number'?v.toFixed(2):null;
+function srcHtml(a){if(!a||!a.length)return'';return '<div class="src"><span>Sources</span>'+a.map(s=>
+ `<details><summary><b>📄 ${esc(s.source||'Unknown source')}</b>${s.chunk_index!=null?'<small>Chunk '+esc(s.chunk_index)+'</small>':''}${num(s.retrieval_score)?'<em>Relevance '+num(s.retrieval_score)+'</em>':''}</summary><div>${s.reranker_score!=null?'Reranker score: '+esc(num(s.reranker_score)||s.reranker_score)+'<br>':''}${s.document_id?'Document: '+esc(s.document_id)+'<br>':''}${s.text?esc(s.text):''}</div></details>`).join('')+'</div>'}
+function addMsg(role,text,srcs){const d=document.createElement('div');d.className='m '+(role==='user'?'u':'a');
+ d.innerHTML=role==='user'?'<div class="bub">'+esc(text)+'</div>':'<div class="av"></div><div class="bub">'+md(text)+'</div>';$('chat').append(d);return d}
+function addErr(m,retry){const d=document.createElement('div');d.className='m';d.innerHTML='<div class="mer">'+esc(m)+(retry?'<button class="btn ghost">Retry</button>':'')+'</div>';
+ if(retry)d.querySelector('button').onclick=()=>{d.remove();retry()};$('chat').append(d);scroll();return d}
+function welcome(){$('chat').innerHTML=`<div class="welcome"><h1 class="grad">Wemi AI</h1><p>Your knowledge, connected to AI.</p><div class="ex">${['Summarize my document','What are the main ideas in this file?','Explain this concept from my documents','Find information about...'].map(t=>`<button>${t}</button>`).join('')}</div></div>`;
+ $('chat').querySelectorAll('.ex button').forEach(b=>b.onclick=()=>{$('in').value=b.textContent;$('in').focus()})}
+const scroll=()=>{$('msgs').scrollTop=$('msgs').scrollHeight};
+async function ask(q,retry){if(S.busy||!S.cur)return;S.busy=true;$('send').disabled=true;const id=S.cur;
+ if(!retry){const w=$('chat').querySelector('.welcome');if(w)$('chat').innerHTML='';addMsg('user',q)}
+ const t=document.createElement('div');t.className='m';t.innerHTML='<div class="av"></div><div class="dots"><i></i><i></i><i></i></div>';$('chat').append(t);scroll();
+ try{const r=await api(RAG,'/generation/generate',{method:'POST',json:{session_id:id,question:q}});
+  t.remove();if(S.cur!==id)return;const a=(r&&r.answer)||'(No answer returned.)';(S.srcs[id]=S.srcs[id]||{})[a]=r.sources||[];addMsg('assistant',a,r.sources);scroll()}
+ catch(e){t.remove();if(S.cur===id)addErr(e.message,()=>{S.busy=false;ask(q,true)})}
+ finally{S.busy=false;$('send').disabled=false;$('in').focus()}}
+function submit(){const q=$('in').value.trim();if(!q||S.busy)return;$('in').value='';$('in').style.height='auto';ask(q)}
+
+/* ---------- upload ---------- */
+function findDocId(o,d=0){if(!o||typeof o!=='object'||d>6)return null;if(typeof o.document_id==='string'||typeof o.document_id==='number')return String(o.document_id);
+ for(const v of Object.values(o)){const r=findDocId(v,d+1);if(r)return r}return null}
+const size=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+function renderFiles(){$('files').innerHTML=S.files.map(f=>`<div class="fc">📄 <span>${esc(f.name)}</span><small>${size(f.size)}</small><span class="${f.st}" title="${esc(f.err||'')}">${f.st}${f.err?': '+esc(f.err):''}</span></div>`).join('')}
+async function upload(file){if(!S.cur)return;const f={name:file.name,size:file.size,st:'Uploading'};S.files.push(f);renderFiles();
+ try{const fd=new FormData();fd.append('session_id',S.cur);fd.append('file',file);
+  const r=await api(RAG,'/api/v1/upload',{method:'POST',form:fd});f.st='Uploaded';renderFiles();
+  const did=findDocId(r);if(!did)throw new ApiError('The backend upload response did not provide document_id, so the file cannot be processed.',200);
+  f.st='Processing';renderFiles();await api(RAG,'/api/v1/process',{method:'POST',json:{document_id:did}});f.st='Ready'}
+ catch(e){f.st='Failed';f.err=e.message}renderFiles()}
+
+/* ---------- boot / events ---------- */
+async function boot(){try{S.user=await api(AUTH,'/auth/me');await loadSessions()}
+ catch(e){if(e.status!==401)showAuth(e.message);return}
+ $('auth').classList.add('hide');$('app').classList.remove('hide');
+ $('who').textContent=S.user.email||S.user.username||S.user.name||'Account';
+ try{if(!S.sessions.length)await newSession();else{const k=localStorage.getItem(SK);await selectSession(S.sessions.some(s=>sid(s)===k)?k:sid(S.sessions[0]))}}
+ catch(e){toast(e.message)}renderList()}
+$('ab').onclick=submitAuth;$('auth').addEventListener('keydown',e=>{if(e.key==='Enter')submitAuth()});
+$('lo').onclick=()=>logout();$('nc').onclick=()=>newSession().catch(e=>toast(e.message));
+$('q').oninput=renderList;$('menu').onclick=()=>$('side').classList.toggle('open');
+$('list').onclick=e=>{const d=e.target.closest('[data-del]');if(d)return askDelete(d.dataset.del);const i=e.target.closest('.it');if(i&&i.dataset.id!==S.cur)selectSession(i.dataset.id)};
+$('send').onclick=submit;$('in').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit()}};
+$('in').oninput=()=>{$('in').style.height='auto';$('in').style.height=Math.min($('in').scrollHeight,180)+'px'};
+$('att').onclick=()=>$('fi').click();$('fi').onchange=()=>{[...$('fi').files].forEach(upload);$('fi').value=''};
+let dc=0;const main=$('main');
+main.addEventListener('dragenter',e=>{e.preventDefault();dc++;$('drop').classList.remove('hide')});
+main.addEventListener('dragleave',()=>{if(--dc<=0){dc=0;$('drop').classList.add('hide')}});
+main.addEventListener('dragover',e=>e.preventDefault());
+main.addEventListener('drop',e=>{e.preventDefault();dc=0;$('drop').classList.add('hide');[...e.dataTransfer.files].forEach(upload)});
+localStorage.getItem(TK)?boot():showAuth();
+</script></body></html>
