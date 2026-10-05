@@ -93,6 +93,7 @@ button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}
 const AUTH='http://localhost:5003',RAG='http://localhost:5004',TK='wemi_token',SK='wemi_active';
 const $=id=>document.getElementById(id);
 const S={user:null,sessions:[],cur:null,busy:false,files:[],mode:'login',extra:[],srcs:{}};
+try{S.srcs=JSON.parse(localStorage.getItem('wemi_srcs')||'{}')}catch{}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 class ApiError extends Error{constructor(m,s,d){super(m);this.status=s;this.data=d}}
 function errMsg(st,d){const x=d&&d.detail!==undefined?d.detail:d&&(d.message||d.error);
@@ -145,11 +146,18 @@ async function submitAuth(){const email=$('a_email').value.trim(),password=$('a_
   localStorage.setItem(TK,r.user_token);await boot()
  }catch(e){$('ae').textContent=e.status===401&&S.mode==='login'?'Invalid email or password.':e.message}
  finally{$('ab').disabled=false;$('ab').textContent=old}}
-function logout(msg){localStorage.removeItem(TK);localStorage.removeItem(SK);Object.assign(S,{user:null,sessions:[],cur:null,files:[],busy:false,srcs:{}});S.mode='login';showAuth(typeof msg==='string'?msg:'')}
+function logout(msg){localStorage.removeItem(TK);localStorage.removeItem(SK);localStorage.removeItem('wemi_srcs');localStorage.removeItem('wemi_titles');TT={};Object.assign(S,{user:null,sessions:[],cur:null,files:[],busy:false,srcs:{}});S.mode='login';showAuth(typeof msg==='string'?msg:'')}
 
 /* ---------- sessions ---------- */
 const sid=s=>s&&(s.session_id||s.id);
-const title=s=>(s&&s.title&&String(s.title).trim())||'New Chat';
+let TT={};try{TT=JSON.parse(localStorage.getItem('wemi_titles')||'{}')}catch{}
+const mk=t=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>40?t.slice(0,40).trim()+'…':t};
+const saveTT=()=>{try{localStorage.setItem('wemi_titles',JSON.stringify(TT))}catch{}};
+const title=s=>{const b=s&&s.title&&String(s.title).trim();return(b&&b.toLowerCase()!=='new chat'?b:TT[sid(s)])||'New Chat'};
+function setTitle(id,q){if(TT[id]||!mk(q))return;TT[id]=mk(q);saveTT();renderList()}
+function learn(id,ms){if(TT[id])return;const f=(ms||[]).find(m=>m.role==='user');if(f)setTitle(id,f.content)}
+async function backfill(){const l=S.sessions.filter(x=>title(x)==='New Chat'&&sid(x)!==S.cur).slice(0,15);
+ for(const x of l){try{const r=await api(RAG,'/api/v1/sessions/'+encodeURIComponent(sid(x))+'/messages');learn(sid(x),(r&&r.messages)||[])}catch{}}}
 const fmt=d=>{const x=new Date(d);return isNaN(x)?'':x.toLocaleDateString(undefined,{month:'short',day:'numeric'})};
 async function loadSessions(){const r=await api(RAG,'/api/v1/sessions');const a=Array.isArray(r)?r:(r&&r.sessions)||[];
  S.sessions=a.sort((x,y)=>new Date(y.created_at||0)-new Date(x.created_at||0))}
@@ -160,7 +168,7 @@ async function newSession(select=true){const r=await api(RAG,'/api/v1/sessions',
 async function selectSession(id){S.cur=id;localStorage.setItem(SK,id);S.files=[];renderFiles();renderList();
  $('side').classList.remove('open');$('chat').innerHTML='<div class="dots"><i></i><i></i><i></i></div>';
  try{const r=await api(RAG,'/api/v1/sessions/'+encodeURIComponent(id)+'/messages');
-  if(S.cur!==id)return;const ms=(r&&r.messages)||[];$('chat').innerHTML='';
+  if(S.cur!==id)return;const ms=(r&&r.messages)||[];learn(id,ms);$('chat').innerHTML='';
   if(!ms.length)welcome();else ms.forEach((m,i)=>addMsg(m.role,m.content,(S.srcs[id]||{})[m.content]));scroll()}
  catch(e){$('chat').innerHTML='';addErr(e.message,()=>selectSession(id))}}
 function renderList(){const q=$('q').value.toLowerCase();
@@ -186,21 +194,41 @@ function md(t){const bl=[];t=esc(t).replace(/```\w*\n?([\s\S]*?)```/g,(m,c)=>{bl
   else if(!ln.trim()){fl();cl()}else{cl();para.push(ln)}}
  fl();cl();return o.replace(/\u0001(\d+)\u0001/g,(m,i)=>bl[i])}
 const num=v=>typeof v==='number'?v.toFixed(2):null;
-function srcHtml(a){if(!a||!a.length)return'';return '<div class="src"><span>Sources</span>'+a.map(s=>
- `<details><summary><b>📄 ${esc(s.source||'Unknown source')}</b>${s.chunk_index!=null?'<small>Chunk '+esc(s.chunk_index)+'</small>':''}${num(s.retrieval_score)?'<em>Relevance '+num(s.retrieval_score)+'</em>':''}</summary><div>${s.reranker_score!=null?'Reranker score: '+esc(num(s.reranker_score)||s.reranker_score)+'<br>':''}${s.document_id?'Document: '+esc(s.document_id)+'<br>':''}${s.text?esc(s.text):''}</div></details>`).join('')+'</div>'}
+function srcHtml(a){if(!a||!a.length)return'';const g={};a.forEach(x=>{const n=String(x.source||'Unknown').split('/').pop();(g[n]=g[n]||[]).push(x)});
+ return '<div class="src"><span>Sources</span>'+Object.entries(g).map(([n,l])=>`<details><summary><b>📄 ${esc(n)}</b><small>${l.length>1?l.length+' passages':'1 passage'}</small></summary><div>${l.map(x=>{const v=num(x.reranker_score!=null?x.reranker_score:x.retrieval_score);return 'Chunk '+esc(x.chunk_index)+(v?' · score '+v:'')}).join('<br>')}</div></details>`).join('')+'</div>'}
 function addMsg(role,text,srcs){const d=document.createElement('div');d.className='m '+(role==='user'?'u':'a');
- d.innerHTML=role==='user'?'<div class="bub">'+esc(text)+'</div>':'<div class="av"></div><div class="bub">'+md(text)+'</div>';$('chat').append(d);return d}
+ d.innerHTML=role==='user'?'<div class="bub">'+esc(text)+'</div>':'<div class="av"></div><div class="bub">'+md(text)+srcHtml(srcs)+'</div>';$('chat').append(d);return d}
 function addErr(m,retry){const d=document.createElement('div');d.className='m';d.innerHTML='<div class="mer">'+esc(m)+(retry?'<button class="btn ghost">Retry</button>':'')+'</div>';
  if(retry)d.querySelector('button').onclick=()=>{d.remove();retry()};$('chat').append(d);scroll();return d}
 function welcome(){$('chat').innerHTML=`<div class="welcome"><h1 class="grad">Wemi AI</h1><p>Your knowledge, connected to AI.</p><div class="ex">${['Summarize my document','What are the main ideas in this file?','Explain this concept from my documents','Find information about...'].map(t=>`<button>${t}</button>`).join('')}</div></div>`;
  $('chat').querySelectorAll('.ex button').forEach(b=>b.onclick=()=>{$('in').value=b.textContent;$('in').focus()})}
 const scroll=()=>{$('msgs').scrollTop=$('msgs').scrollHeight};
+async function streamAsk(id,q,on){
+ if(S.noStream)return null;const tk=localStorage.getItem(TK);let r;
+ try{r=await fetch(RAG+'/generation/generate/stream',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({session_id:id,question:q})})}
+ catch(e){throw new ApiError('Cannot reach the server. Make sure the backend is running and allows CORS from http://localhost:5500.',0)}
+ if(r.status===404||r.status===405){S.noStream=true;return null}
+ if(r.status===401){logout('Session expired. Please log in again.');throw new ApiError('Unauthorized',401)}
+ if(!r.ok){let d=null;try{d=await r.json()}catch{}throw new ApiError(errMsg(r.status,d),r.status,d)}
+ const rd=r.body.getReader(),dec=new TextDecoder();let buf='',out='',srcs=[];
+ for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+  while((i=buf.indexOf('\n\n'))>=0){const ev=buf.slice(0,i);buf=buf.slice(i+2);
+   const ln=ev.split('\n').filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).join('');if(!ln)continue;
+   let j;try{j=JSON.parse(ln)}catch{continue}
+   if(j.error)throw new ApiError(j.error,500);
+   if(j.token){out+=j.token;on(out)}
+   if(j.done)srcs=j.sources||[]}}
+ if(!out)throw new ApiError('The model returned an empty answer.',200);
+ return{answer:out,sources:srcs}}
 async function ask(q,retry){if(S.busy||!S.cur)return;S.busy=true;$('send').disabled=true;const id=S.cur;
- if(!retry){const w=$('chat').querySelector('.welcome');if(w)$('chat').innerHTML='';addMsg('user',q)}
+ if(!retry){const w=$('chat').querySelector('.welcome');if(w){setTitle(id,q);$('chat').innerHTML=''}addMsg('user',q)}
  const t=document.createElement('div');t.className='m';t.innerHTML='<div class="av"></div><div class="dots"><i></i><i></i><i></i></div>';$('chat').append(t);scroll();
- try{const r=await api(RAG,'/generation/generate',{method:'POST',json:{session_id:id,question:q}});
-  t.remove();if(S.cur!==id)return;const a=(r&&r.answer)||'(No answer returned.)';(S.srcs[id]=S.srcs[id]||{})[a]=r.sources||[];addMsg('assistant',a,r.sources);scroll()}
- catch(e){t.remove();if(S.cur===id)addErr(e.message,()=>{S.busy=false;ask(q,true)})}
+ let bub=null;const on=txt=>{if(S.cur!==id)return;if(!bub){t.remove();bub=addMsg('assistant','')}bub.querySelector('.bub').innerHTML=md(txt);scroll()};
+ try{let r=await streamAsk(id,q,on);
+  if(r===null){const g=await api(RAG,'/generation/generate',{method:'POST',json:{session_id:id,question:q}});r={answer:(g&&g.answer)||'(No answer returned.)',sources:g&&g.sources}}
+  t.remove();if(S.cur!==id)return;(S.srcs[id]=S.srcs[id]||{})[r.answer]=r.sources||[];
+  if(bub)bub.querySelector('.bub').innerHTML=md(r.answer)+srcHtml(r.sources);else addMsg('assistant',r.answer,r.sources);try{localStorage.setItem('wemi_srcs',JSON.stringify(S.srcs))}catch{};scroll()}
+ catch(e){t.remove();if(S.cur===id)addErr(e.message,()=>{if(bub)bub.remove();S.busy=false;ask(q,true)})}
  finally{S.busy=false;$('send').disabled=false;$('in').focus()}}
 function submit(){const q=$('in').value.trim();if(!q||S.busy)return;$('in').value='';$('in').style.height='auto';ask(q)}
 
@@ -222,7 +250,7 @@ async function boot(){try{S.user=await api(AUTH,'/auth/me');await loadSessions()
  $('auth').classList.add('hide');$('app').classList.remove('hide');
  $('who').textContent=S.user.email||S.user.username||S.user.name||'Account';
  try{if(!S.sessions.length)await newSession();else{const k=localStorage.getItem(SK);await selectSession(S.sessions.some(s=>sid(s)===k)?k:sid(S.sessions[0]))}}
- catch(e){toast(e.message)}renderList()}
+ catch(e){toast(e.message)}renderList();backfill()}
 $('ab').onclick=submitAuth;$('auth').addEventListener('keydown',e=>{if(e.key==='Enter')submitAuth()});
 $('lo').onclick=()=>logout();$('nc').onclick=()=>newSession().catch(e=>toast(e.message));
 $('q').oninput=renderList;$('menu').onclick=()=>$('side').classList.toggle('open');
