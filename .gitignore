@@ -25,3 +25,11 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local secrets
+src/Configuration/.env
+Back End/.env
+**/.env
+
+# Downloaded model caches
+models/bge-m3/
