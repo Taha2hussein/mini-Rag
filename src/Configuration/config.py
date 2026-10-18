@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     FILE_ALLOWED_TYPES: list[str]
     FILE_ALLOWED_SIZE_MB: int
 
-    STORAGE_PROVIDER: str = "local"
+    STORAGE_PROVIDER: str = "s3"
     FILE_DIR: str = "assets/files"
 
     AWS_BUCKET_NAME: str

@@ -90,7 +90,11 @@ button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}
 <div id="toast"></div>
 
 <script>
-const AUTH='http://localhost:5003',RAG='http://localhost:5004',TK='wemi_token',SK='wemi_active';
+
+const AUTH='https://democrats-mailto-checklist-cookies.trycloudflare.com',
+    RAG='https://isa-discussing-complement-recognize.trycloudflare.com',
+    TK='wemi_token',
+    SK='wemi_active';
 const $=id=>document.getElementById(id);
 const S={user:null,sessions:[],cur:null,busy:false,files:[],mode:'login',extra:[],srcs:{}};
 try{S.srcs=JSON.parse(localStorage.getItem('wemi_srcs')||'{}')}catch{}
